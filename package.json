@@ -1,0 +1,22 @@
+{
+  "name": "discipl-core-memory",
+  "version": "0.0.1",
+  "description": "Discipl Core Local Memory Connector",
+  "main": "index.js",
+  "repository": "https://github.com/discipl/discipl-core-memory",
+  "author": "Bas Kaptijn",
+  "license": "GPL-3.0",
+  "scripts": {
+    "test": "vows test/discipl-core-memory-test.js --spec"
+  },
+  "dependencies": {
+    "crypto-js": "3.1.9-1",
+    "debug": "3.1.0",
+    "discipl-core": "git://github.com/discipl/core.git#connectors-splitoff"
+  },
+  "devDependencies": {
+    "assert": "1.4.1",
+    "rewire": "4.0.1",
+    "vows": "0.8.2"
+  }
+}
