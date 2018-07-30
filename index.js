@@ -9,18 +9,16 @@ module.exports = class LocalMemoryConnector extends BaseConnector {
   }
 
   getName() {
-    return "mem"
+    return "memory"
   }
 
   async getSsidOfClaim(reference) {
-    return new Promise(function(resolve, reject) {
-      for(pubkey in this.storeData) {
-        if(Object.keys(this.storeData[pubkey]).contains(reference)) {
-          resolve({'pubkey':pubkey, 'privkey':null})
+      for(let pubkey in this.storeData) {
+        if(Object.keys(this.storeData[pubkey]).includes(reference)) {
+          return {'pubkey':pubkey, 'privkey':null}
         }
       }
-      reject(Error("Claim not found."))
-    });
+      return null
   }
 
   async newSsid() {
@@ -40,12 +38,18 @@ module.exports = class LocalMemoryConnector extends BaseConnector {
   }
 
   async get(reference, ssid = null) {
-    var s = getSsidOfClaim(reference)
+    var s = await this.getSsidOfClaim(reference)
     if(s) {
-      return this.storeData[s.pubkey][reference]
+      let data = this.storeData[s.pubkey][reference]
+      let prevIndex = Object.keys(this.storeData[s.pubkey]).indexOf(reference) - 1
+      let previous = null
+      if(prevIndex > 0) {
+        previous = Object.keys(this.storeData[s.pubkey])[prevIndex]
+      }
+      return {data:this.storeData[s.pubkey][reference], 'previous':previous}
     }
     else {
-      return null
+        return null
     }
   }
 
