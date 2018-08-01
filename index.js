@@ -22,8 +22,7 @@ module.exports = class LocalMemoryConnector extends BaseConnector {
   }
 
   async getLatestClaim(ssid) {
-    console.log(Object.keys(this.storeData[ssid.pubkey]).length>1)
-    if((this.storeData[ssid.pubkey]) && (Object.keys(this.storeData[ssid.pubkey]).length>1))
+    if(Object.keys(this.storeData).includes(ssid.pubkey) && (Object.keys(this.storeData[ssid.pubkey]).length>1))
       return Object.keys(this.storeData[ssid.pubkey])[Object.keys(this.storeData[ssid.pubkey]).length-1]
     return null
   }
