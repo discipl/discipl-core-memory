@@ -38,7 +38,6 @@ let suite = vows.describe('discipl-core-memory').addBatch({
   'claim()' : {
     topic : function () {
       vows = this
-      console.log('tmpSsid:'+tmpSsid)
       connector.claim(tmpSsid, {'need':'beer'}).then(function (res) {
         tmpReference = res
         vows.callback(null, res)
@@ -48,7 +47,6 @@ let suite = vows.describe('discipl-core-memory').addBatch({
     },
     ' returns a reference to the claim' : function (err, reference) {
         assert.equal(err, null)
-        console.log("Reference: "+reference)
         assert.equal(typeof reference, 'string', 'Not a string: '+reference)
         assert.equal(reference.length , 88)
         assert.equal(tmpReference, reference)
@@ -81,7 +79,6 @@ let suite = vows.describe('discipl-core-memory').addBatch({
     },
     ' returns a reference to the claim' : function (err, reference) {
         assert.equal(err, null)
-        console.log("Reference: "+reference)
         assert.equal(typeof reference, 'string', 'Not a string: '+reference)
         assert.equal(reference.length , 88)
         assert.equal(tmpReference2, reference)
@@ -96,10 +93,66 @@ let suite = vows.describe('discipl-core-memory').addBatch({
         vows.callback(err, null)
       })
     },
-    ' returns a result object with the data and a previous reference that equals null' : function (err, res) {
+    ' returns a result object with the data and a previous reference to the first claim' : function (err, res) {
         assert.equal(err, null)
         assert.equal(JSON.stringify(res.data), JSON.stringify({'need':'u'}))
         assert.equal(res.previous, tmpReference)
+    }
+  }}).addBatch({
+  'getLatestClaim()' : {
+    topic : function () {
+      vows = this
+      connector.getLatestClaim(tmpSsid).then(function (res) {
+        vows.callback(null, res)
+      }).catch(function (err) {
+        vows.callback(err, null)
+      })
+    },
+    ' returns a reference to the second claim' : function (err, res) {
+        assert.equal(err, null)
+        assert.equal(res, tmpReference2)
+    }
+  }}).addBatch({
+  'verify() with same data as first claim made by an ssid given as arguments ' : {
+    topic : function () {
+      vows = this
+      connector.verify(tmpSsid, {'need':'beer'}).then(function (res) {
+        vows.callback(null, res)
+      }).catch(function (err) {
+        vows.callback(err, null)
+      })
+    },
+    ' returns the reference of this first claim' : function (err, res) {
+        assert.equal(err, null)
+        assert.equal(res, tmpReference)
+    }
+  }}).addBatch({
+  'verify() with same data as second claim made by an ssid given as arguments ' : {
+    topic : function () {
+      vows = this
+      connector.verify(tmpSsid, {'need':'u'}).then(function (res) {
+        vows.callback(null, res)
+      }).catch(function (err) {
+        vows.callback(err, null)
+      })
+    },
+    ' returns the reference to the second claim' : function (err, res) {
+        assert.equal(err, null)
+        assert.equal(res, tmpReference2)
+    }
+  }}).addBatch({
+  'verify() with give data, a given ssid has not claimed yet ' : {
+    topic : function () {
+      vows = this
+      connector.verify(tmpSsid, {'need':'food'}).then(function (res) {
+        vows.callback(null, res)
+      }).catch(function (err) {
+        vows.callback(err, null)
+      })
+    },
+    ' returns null' : function (err, res) {
+        assert.equal(err, null)
+        assert.equal(res, null)
     }
   }
 }).export(module)

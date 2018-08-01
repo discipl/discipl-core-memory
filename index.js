@@ -21,6 +21,13 @@ module.exports = class LocalMemoryConnector extends BaseConnector {
       return null
   }
 
+  async getLatestClaim(ssid) {
+    console.log(Object.keys(this.storeData[ssid.pubkey]).length>1)
+    if((this.storeData[ssid.pubkey]) && (Object.keys(this.storeData[ssid.pubkey]).length>1))
+      return Object.keys(this.storeData[ssid.pubkey])[Object.keys(this.storeData[ssid.pubkey]).length-1]
+    return null
+  }
+
   async newSsid() {
     var pubkey = CryptoJS.enc.Base64.stringify(CryptoJS.lib.WordArray.random(64));
     this.storeData[pubkey] = new Array()
@@ -46,7 +53,7 @@ module.exports = class LocalMemoryConnector extends BaseConnector {
       if(prevIndex > 0) {
         previous = Object.keys(this.storeData[s.pubkey])[prevIndex]
       }
-      return {data:this.storeData[s.pubkey][reference], 'previous':previous}
+      return {'data':this.storeData[s.pubkey][reference], 'previous':previous}
     }
     else {
         return null
