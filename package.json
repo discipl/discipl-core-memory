@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "crypto-js": "3.1.9-1",
-    "debug": "3.1.0"
+    "debug": "3.1.0",
+    "discipl-core-baseconnector": "git+https://github.com/discipl/discipl-core-baseconnector.git"
   },
   "devDependencies": {
-    "discipl-core": "git://github.com/discipl/core.git#connectors-splitoff",
     "assert": "1.4.1",
     "rewire": "4.0.1",
     "vows": "0.8.2"

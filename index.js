@@ -1,5 +1,5 @@
 const CryptoJS = require('crypto-js');
-const BaseConnector = require('discipl-core/connectors/base-connector.js')
+const BaseConnector = require('discipl-core-baseconnector')
 
 module.exports = class LocalMemoryConnector extends BaseConnector {
 
