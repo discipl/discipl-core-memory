@@ -27,13 +27,13 @@ class LocalMemoryConnector extends BaseConnector {
 
   async newSsid () {
     var pubkey = crypto.enc.Base64.stringify(crypto.lib.WordArray.random(64))
-    this.storeData[pubkey] = new Array()
-    this.storeData[pubkey]['privkey'] = crypto.enc.Base64.stringify(CryptoJS.lib.WordArray.random(64))
+    this.storeData[pubkey] = []
+    this.storeData[pubkey]['privkey'] = crypto.enc.Base64.stringify(crypto.lib.WordArray.random(64))
     return { 'pubkey': pubkey, 'privkey': this.storeData[pubkey]['privkey'] }
   }
 
   async claim (ssid, data) {
-    if ((this.storeData[ssid.pubkey]) && (this.storeData[ssid.pubkey]['privkey'] == ssid.privkey)) {
+    if ((this.storeData[ssid.pubkey]) && (this.storeData[ssid.pubkey]['privkey'] === ssid.privkey)) {
       var index = crypto.enc.Base64.stringify(crypto.lib.WordArray.random(64))
       this.storeData[ssid.pubkey][index] = data
       return index
@@ -50,7 +50,7 @@ class LocalMemoryConnector extends BaseConnector {
       if (prevIndex > 0) {
         previous = Object.keys(this.storeData[s.pubkey])[prevIndex]
       }
-      return { 'data': this.storeData[s.pubkey][reference], 'previous': previous }
+      return { 'data': data, 'previous': previous }
     } else {
       return null
     }
