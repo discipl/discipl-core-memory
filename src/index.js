@@ -57,7 +57,7 @@ class LocalMemoryConnector extends BaseConnector {
   }
 
   async subscribe (ssid) {
-    return null
+    throw new TypeError('Subscribe is not implemented')
   }
 }
 
