@@ -76,7 +76,7 @@ describe('disciple-memory-connector', () => {
     let memoryConnector = new MemoryConnector()
     let ssid = await memoryConnector.newSsid()
     await memoryConnector.claim(ssid, { 'need': 'beer' })
-    let reference2 = await memoryConnector.claim(ssid, { 'need': 'wine' })
+    await memoryConnector.claim(ssid, { 'need': 'wine' })
 
     ssid.pubkey = ''.padStart('a', 88)
 
