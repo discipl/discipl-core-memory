@@ -4,7 +4,7 @@ import { BaseConnector } from 'discipl-core-baseconnector'
 class LocalMemoryConnector extends BaseConnector {
   constructor () {
     super()
-    this.storeData = []
+    this.storeData = {}
   }
 
   getName () {
@@ -13,7 +13,7 @@ class LocalMemoryConnector extends BaseConnector {
 
   async getSsidOfClaim (reference) {
     for (let pubkey in this.storeData) {
-      if (Object.keys(this.storeData[pubkey]).includes(reference)) {
+      if (Object.keys(this.storeData[pubkey]['claims']).includes(reference)) {
         return { 'pubkey': pubkey, 'privkey': null }
       }
     }
@@ -21,21 +21,29 @@ class LocalMemoryConnector extends BaseConnector {
   }
 
   async getLatestClaim (ssid) {
-    if (Object.keys(this.storeData).includes(ssid.pubkey) && (Object.keys(this.storeData[ssid.pubkey]).length > 1)) { return Object.keys(this.storeData[ssid.pubkey])[Object.keys(this.storeData[ssid.pubkey]).length - 1] }
+    if (this.storeData[ssid.pubkey]) {
+      return this.storeData[ssid.pubkey]['lastClaim']
+    }
+
     return null
   }
 
   async newSsid () {
     var pubkey = crypto.enc.Base64.stringify(crypto.lib.WordArray.random(64))
-    this.storeData[pubkey] = []
-    this.storeData[pubkey]['privkey'] = crypto.enc.Base64.stringify(crypto.lib.WordArray.random(64))
+    this.storeData[pubkey] = {
+      'claims': {},
+      'lastClaim': null,
+      'privkey': crypto.enc.Base64.stringify(crypto.lib.WordArray.random(64))
+    }
     return { 'pubkey': pubkey, 'privkey': this.storeData[pubkey]['privkey'] }
   }
 
   async claim (ssid, data) {
     if ((this.storeData[ssid.pubkey]) && (this.storeData[ssid.pubkey]['privkey'] === ssid.privkey)) {
-      var index = crypto.enc.Base64.stringify(crypto.lib.WordArray.random(64))
-      this.storeData[ssid.pubkey][index] = data
+      let index = crypto.enc.Base64.stringify(crypto.lib.WordArray.random(64))
+      this.storeData[ssid.pubkey]['claims'][index] = { 'data': data, 'previous': this.storeData[ssid.pubkey]['lastClaim'] }
+
+      this.storeData[ssid.pubkey]['lastClaim'] = index
       return index
     }
     return null
@@ -44,19 +52,13 @@ class LocalMemoryConnector extends BaseConnector {
   async get (reference, ssid = null) {
     var s = await this.getSsidOfClaim(reference)
     if (s) {
-      let data = this.storeData[s.pubkey][reference]
-      let prevIndex = Object.keys(this.storeData[s.pubkey]).indexOf(reference) - 1
-      let previous = null
-      if (prevIndex > 0) {
-        previous = Object.keys(this.storeData[s.pubkey])[prevIndex]
-      }
-      return { 'data': data, 'previous': previous }
+      return this.storeData[s.pubkey]['claims'][reference]
     } else {
       return null
     }
   }
 
-  async subscribe (ssid) {
+  async subscribe (ssid, filter) {
     throw new TypeError('Subscribe is not implemented')
   }
 }
