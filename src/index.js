@@ -1,10 +1,13 @@
 import crypto from 'crypto-js'
 import { BaseConnector } from 'discipl-core-baseconnector'
+import { Subject } from 'rxjs'
+import { filter } from 'rxjs/operators'
 
 class LocalMemoryConnector extends BaseConnector {
   constructor () {
     super()
     this.storeData = {}
+    this.claimSubject = new Subject()
   }
 
   getName () {
@@ -44,6 +47,7 @@ class LocalMemoryConnector extends BaseConnector {
       this.storeData[ssid.pubkey]['claims'][index] = { 'data': data, 'previous': this.storeData[ssid.pubkey]['lastClaim'] }
 
       this.storeData[ssid.pubkey]['lastClaim'] = index
+      this.claimSubject.next({ 'pubkey': ssid.pubkey, 'claim': this.storeData[ssid.pubkey]['claims'][index] })
       return index
     }
     return null
@@ -58,8 +62,25 @@ class LocalMemoryConnector extends BaseConnector {
     }
   }
 
-  async subscribe (ssid, filter) {
-    throw new TypeError('Subscribe is not implemented')
+  async subscribe (ssid, claimFilter) {
+    return this.claimSubject.pipe(filter(claim => {
+      if (claimFilter != null) {
+        for (let predicate of Object.keys(claimFilter)) {
+          if (claim[predicate] == null) {
+            // Predicate not present in claim
+            return false
+          }
+
+          if (claimFilter[predicate] != null && claimFilter[predicate] !== claim[predicate]) {
+            // Object is provided in filter, but does not match with actual claim
+            return false
+          }
+        }
+      }
+
+      return ssid != null && claim.pubkey === ssid.pubkey
+    })
+    )
   }
 }
 

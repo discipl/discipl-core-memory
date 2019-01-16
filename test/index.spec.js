@@ -4,6 +4,8 @@
 import { expect } from 'chai'
 import MemoryConnector from '../src/index'
 
+import { take } from 'rxjs/operators'
+
 describe('disciple-memory-connector', () => {
   it('should present a name', async () => {
     let memoryConnector = new MemoryConnector()
@@ -118,13 +120,16 @@ describe('disciple-memory-connector', () => {
     expect(verification).to.equal(null)
   })
 
-  it('should not support subscribe', () => {
+  it('be able to subscribe', async () => {
     let memoryConnector = new MemoryConnector()
-    return memoryConnector.subscribe(null)
-      .then((result) => expect.fail('Should not have succeeded'))
-      .catch((error) => {
-        expect(error).to.be.an('error')
-        expect(error.message).to.equal('Subscribe is not implemented')
-      })
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.subscribe(ssid)
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    await memoryConnector.claim(ssid, { 'need': 'beer' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({})
   })
 })
