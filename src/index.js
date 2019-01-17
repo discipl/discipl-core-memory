@@ -47,7 +47,7 @@ class LocalMemoryConnector extends BaseConnector {
       this.storeData[ssid.pubkey]['claims'][index] = { 'data': data, 'previous': this.storeData[ssid.pubkey]['lastClaim'] }
 
       this.storeData[ssid.pubkey]['lastClaim'] = index
-      this.claimSubject.next({ 'pubkey': ssid.pubkey, 'claim': this.storeData[ssid.pubkey]['claims'][index] })
+      this.claimSubject.next({ 'ssid': { 'pubkey': ssid.pubkey }, 'claim': this.storeData[ssid.pubkey]['claims'][index] })
       return index
     }
     return null
@@ -66,19 +66,19 @@ class LocalMemoryConnector extends BaseConnector {
     return this.claimSubject.pipe(filter(claim => {
       if (claimFilter != null) {
         for (let predicate of Object.keys(claimFilter)) {
-          if (claim[predicate] == null) {
+          if (claim['claim']['data'][predicate] == null) {
             // Predicate not present in claim
             return false
           }
 
-          if (claimFilter[predicate] != null && claimFilter[predicate] !== claim[predicate]) {
+          if (claimFilter[predicate] != null && claimFilter[predicate] !== claim['claim']['data'][predicate]) {
             // Object is provided in filter, but does not match with actual claim
             return false
           }
         }
       }
 
-      return ssid != null && claim.pubkey === ssid.pubkey
+      return ssid == null || claim.ssid.pubkey === ssid.pubkey
     })
     )
   }

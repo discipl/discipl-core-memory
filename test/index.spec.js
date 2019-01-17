@@ -130,6 +130,89 @@ describe('disciple-memory-connector', () => {
 
     let result = await resultPromise
 
-    expect(result).to.deep.equal({})
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'beer'
+        },
+        'previous': null
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+  })
+
+  it('be able to subscribe without an ssid', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.subscribe(null)
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    await memoryConnector.claim(ssid, { 'need': 'beer' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'beer'
+        },
+        'previous': null
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+  })
+
+  it('be able to subscribe with a filter', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.subscribe(null, { 'need': 'wine' })
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    let previousLink = await memoryConnector.claim(ssid, { 'need': 'beer' })
+    await memoryConnector.claim(ssid, { 'need': 'wine' })
+    await memoryConnector.claim(ssid, { 'need': 'tea' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'wine'
+        },
+        'previous': previousLink
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+  })
+
+  it('be able to subscribe with a filter on the predicate', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.subscribe(null, { 'desire': null })
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    let previousLink = await memoryConnector.claim(ssid, { 'need': 'beer' })
+    await memoryConnector.claim(ssid, { 'desire': 'wine' })
+    await memoryConnector.claim(ssid, { 'need': 'tea' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'desire': 'wine'
+        },
+        'previous': previousLink
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
   })
 })
