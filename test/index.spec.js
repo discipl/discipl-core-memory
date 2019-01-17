@@ -191,6 +191,31 @@ describe('disciple-memory-connector', () => {
     })
   })
 
+  it('be able to observe with a filter and ssid', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.observe(ssid, { 'need': 'wine' })
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    let previousLink = await memoryConnector.claim(ssid, { 'need': 'beer' })
+    await memoryConnector.claim(ssid, { 'need': 'wine' })
+    await memoryConnector.claim(ssid, { 'need': 'tea' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'wine'
+        },
+        'previous': previousLink
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+  })
+
   it('be able to observe with a filter on the predicate', async () => {
     let memoryConnector = new MemoryConnector()
     let ssid = await memoryConnector.newSsid()
@@ -212,6 +237,46 @@ describe('disciple-memory-connector', () => {
       },
       'ssid': {
         'pubkey': ssid.pubkey
+      }
+    })
+  })
+
+  it('be able to observe with multiple subscribers', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+    let ssid2 = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.observe(ssid)
+    let observable2 = await memoryConnector.observe(ssid2)
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    let resultPromise2 = observable2.pipe(take(1)).toPromise()
+    await memoryConnector.claim(ssid, { 'need': 'beer' })
+    await memoryConnector.claim(ssid2, { 'need': 'wine' })
+
+    let result = await resultPromise
+    let result2 = await resultPromise2
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'beer'
+        },
+        'previous': null
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+
+    expect(result2).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'wine'
+        },
+        'previous': null
+      },
+      'ssid': {
+        'pubkey': ssid2.pubkey
       }
     })
   })
