@@ -120,11 +120,11 @@ describe('disciple-memory-connector', () => {
     expect(verification).to.equal(null)
   })
 
-  it('be able to subscribe', async () => {
+  it('be able to observe', async () => {
     let memoryConnector = new MemoryConnector()
     let ssid = await memoryConnector.newSsid()
 
-    let observable = await memoryConnector.subscribe(ssid)
+    let observable = await memoryConnector.observe(ssid)
     let resultPromise = observable.pipe(take(1)).toPromise()
     await memoryConnector.claim(ssid, { 'need': 'beer' })
 
@@ -143,11 +143,11 @@ describe('disciple-memory-connector', () => {
     })
   })
 
-  it('be able to subscribe without an ssid', async () => {
+  it('be able to observe without an ssid', async () => {
     let memoryConnector = new MemoryConnector()
     let ssid = await memoryConnector.newSsid()
 
-    let observable = await memoryConnector.subscribe(null)
+    let observable = await memoryConnector.observe(null)
     let resultPromise = observable.pipe(take(1)).toPromise()
     await memoryConnector.claim(ssid, { 'need': 'beer' })
 
@@ -166,11 +166,11 @@ describe('disciple-memory-connector', () => {
     })
   })
 
-  it('be able to subscribe with a filter', async () => {
+  it('be able to observe with a filter', async () => {
     let memoryConnector = new MemoryConnector()
     let ssid = await memoryConnector.newSsid()
 
-    let observable = await memoryConnector.subscribe(null, { 'need': 'wine' })
+    let observable = await memoryConnector.observe(null, { 'need': 'wine' })
     let resultPromise = observable.pipe(take(1)).toPromise()
     let previousLink = await memoryConnector.claim(ssid, { 'need': 'beer' })
     await memoryConnector.claim(ssid, { 'need': 'wine' })
@@ -191,11 +191,11 @@ describe('disciple-memory-connector', () => {
     })
   })
 
-  it('be able to subscribe with a filter on the predicate', async () => {
+  it('be able to observe with a filter on the predicate', async () => {
     let memoryConnector = new MemoryConnector()
     let ssid = await memoryConnector.newSsid()
 
-    let observable = await memoryConnector.subscribe(null, { 'desire': null })
+    let observable = await memoryConnector.observe(null, { 'desire': null })
     let resultPromise = observable.pipe(take(1)).toPromise()
     let previousLink = await memoryConnector.claim(ssid, { 'need': 'beer' })
     await memoryConnector.claim(ssid, { 'desire': 'wine' })

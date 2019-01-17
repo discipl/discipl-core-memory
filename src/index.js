@@ -62,7 +62,16 @@ class LocalMemoryConnector extends BaseConnector {
     }
   }
 
-  async subscribe (ssid, claimFilter) {
+  /**
+   * Observes the stream of claims from the memory connector
+   *
+   * @param ssid {object} ssid that the claims should come frome
+   * @param ssid.pubkey {string} Only property of ssid that is matched on
+   * @param claimFilter {object} Object resembling a claim. The key-value pairs must match the claim,
+   * unless the value is null, in which case the key must be present
+   * @returns {Promise<Observable<any>>} Observable that must be subscribed to before any claims are actually captured.
+   */
+  async observe (ssid, claimFilter) {
     return this.claimSubject.pipe(filter(claim => {
       if (claimFilter != null) {
         for (let predicate of Object.keys(claimFilter)) {
