@@ -4,6 +4,8 @@
 import { expect } from 'chai'
 import MemoryConnector from '../src/index'
 
+import { take } from 'rxjs/operators'
+
 describe('disciple-memory-connector', () => {
   it('should present a name', async () => {
     let memoryConnector = new MemoryConnector()
@@ -118,13 +120,164 @@ describe('disciple-memory-connector', () => {
     expect(verification).to.equal(null)
   })
 
-  it('should not support subscribe', () => {
+  it('be able to observe', async () => {
     let memoryConnector = new MemoryConnector()
-    return memoryConnector.subscribe(null)
-      .then((result) => expect.fail('Should not have succeeded'))
-      .catch((error) => {
-        expect(error).to.be.an('error')
-        expect(error.message).to.equal('Subscribe is not implemented')
-      })
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.observe(ssid)
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    await memoryConnector.claim(ssid, { 'need': 'beer' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'beer'
+        },
+        'previous': null
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+  })
+
+  it('be able to observe without an ssid', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.observe(null)
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    await memoryConnector.claim(ssid, { 'need': 'beer' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'beer'
+        },
+        'previous': null
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+  })
+
+  it('be able to observe with a filter', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.observe(null, { 'need': 'wine' })
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    let previousLink = await memoryConnector.claim(ssid, { 'need': 'beer' })
+    await memoryConnector.claim(ssid, { 'need': 'wine' })
+    await memoryConnector.claim(ssid, { 'need': 'tea' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'wine'
+        },
+        'previous': previousLink
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+  })
+
+  it('be able to observe with a filter and ssid', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.observe(ssid, { 'need': 'wine' })
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    let previousLink = await memoryConnector.claim(ssid, { 'need': 'beer' })
+    await memoryConnector.claim(ssid, { 'need': 'wine' })
+    await memoryConnector.claim(ssid, { 'need': 'tea' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'wine'
+        },
+        'previous': previousLink
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+  })
+
+  it('be able to observe with a filter on the predicate', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.observe(null, { 'desire': null })
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    let previousLink = await memoryConnector.claim(ssid, { 'need': 'beer' })
+    await memoryConnector.claim(ssid, { 'desire': 'wine' })
+    await memoryConnector.claim(ssid, { 'need': 'tea' })
+
+    let result = await resultPromise
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'desire': 'wine'
+        },
+        'previous': previousLink
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+  })
+
+  it('be able to observe with multiple subscribers', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+    let ssid2 = await memoryConnector.newSsid()
+
+    let observable = await memoryConnector.observe(ssid)
+    let observable2 = await memoryConnector.observe(ssid2)
+    let resultPromise = observable.pipe(take(1)).toPromise()
+    let resultPromise2 = observable2.pipe(take(1)).toPromise()
+    await memoryConnector.claim(ssid, { 'need': 'beer' })
+    await memoryConnector.claim(ssid2, { 'need': 'wine' })
+
+    let result = await resultPromise
+    let result2 = await resultPromise2
+
+    expect(result).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'beer'
+        },
+        'previous': null
+      },
+      'ssid': {
+        'pubkey': ssid.pubkey
+      }
+    })
+
+    expect(result2).to.deep.equal({
+      'claim': {
+        'data': {
+          'need': 'wine'
+        },
+        'previous': null
+      },
+      'ssid': {
+        'pubkey': ssid2.pubkey
+      }
+    })
   })
 })

@@ -1,10 +1,13 @@
 import crypto from 'crypto-js'
 import { BaseConnector } from 'discipl-core-baseconnector'
+import { Subject } from 'rxjs'
+import { filter } from 'rxjs/operators'
 
 class LocalMemoryConnector extends BaseConnector {
   constructor () {
     super()
     this.storeData = {}
+    this.claimSubject = new Subject()
   }
 
   getName () {
@@ -44,6 +47,7 @@ class LocalMemoryConnector extends BaseConnector {
       this.storeData[ssid.pubkey]['claims'][index] = { 'data': data, 'previous': this.storeData[ssid.pubkey]['lastClaim'] }
 
       this.storeData[ssid.pubkey]['lastClaim'] = index
+      this.claimSubject.next({ 'ssid': { 'pubkey': ssid.pubkey }, 'claim': this.storeData[ssid.pubkey]['claims'][index] })
       return index
     }
     return null
@@ -58,8 +62,34 @@ class LocalMemoryConnector extends BaseConnector {
     }
   }
 
-  async subscribe (ssid, filter) {
-    throw new TypeError('Subscribe is not implemented')
+  /**
+   * Observes the stream of claims from the memory connector
+   *
+   * @param ssid {object} ssid that the claims should come frome
+   * @param ssid.pubkey {string} Only property of ssid that is matched on
+   * @param claimFilter {object} Object resembling a claim. The key-value pairs must match the claim,
+   * unless the value is null, in which case the key must be present
+   * @returns {Promise<Observable<any>>} Observable that must be subscribed to before any claims are actually captured.
+   */
+  async observe (ssid, claimFilter) {
+    return this.claimSubject.pipe(filter(claim => {
+      if (claimFilter != null) {
+        for (let predicate of Object.keys(claimFilter)) {
+          if (claim['claim']['data'][predicate] == null) {
+            // Predicate not present in claim
+            return false
+          }
+
+          if (claimFilter[predicate] != null && claimFilter[predicate] !== claim['claim']['data'][predicate]) {
+            // Object is provided in filter, but does not match with actual claim
+            return false
+          }
+        }
+      }
+
+      return ssid == null || claim.ssid.pubkey === ssid.pubkey
+    })
+    )
   }
 }
 

@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "crypto-js": "3.1.9-1",
-    "discipl-core-baseconnector": "git+https://github.com/discipl/discipl-core-baseconnector.git"
+    "discipl-core-baseconnector": "git+https://github.com/discipl/discipl-core-baseconnector.git#feature/observe",
+    "rxjs": "^6.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",
