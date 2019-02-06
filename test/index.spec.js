@@ -120,6 +120,23 @@ describe('disciple-memory-connector', () => {
     expect(verification).to.equal(null)
   })
 
+  it('should be able to import a claim using the private key given as link', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+    let reference = await memoryConnector.import(ssid, ssid.privkey, { 'need': 'beer' })
+    let verification = await memoryConnector.verify(ssid, { 'need': 'beer' })
+    expect(verification).to.equal(reference)
+  })
+
+  it('should not be able to import a claim when private key not given as link', async () => {
+    let memoryConnector = new MemoryConnector()
+    let ssid = await memoryConnector.newSsid()
+    let reference = await memoryConnector.import(ssid, '', { 'need': 'beer' })
+    expect(reference).to.equal(null)
+    let verification = await memoryConnector.verify(ssid, { 'need': 'beer' })
+    expect(verification).to.equal(null)
+  })
+
   it('be able to observe', async () => {
     let memoryConnector = new MemoryConnector()
     let ssid = await memoryConnector.newSsid()
